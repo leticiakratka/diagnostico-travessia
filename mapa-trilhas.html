@@ -157,6 +157,31 @@
     text-align: center;
     margin-bottom: 24px;
   }
+  .matrix-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .matrix-hint {
+    font-size: 13px;
+    color: var(--gray-text);
+  }
+  .toggle-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--gray-line);
+    color: var(--black);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .toggle-btn:hover { background: var(--gray-soft); border-color: #D8D8DD; }
 
   .matrix {
     display: grid;
@@ -222,6 +247,45 @@
     padding: 18px 16px;
     display: flex;
     flex-direction: column;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    user-select: none;
+  }
+  .card:hover {
+    background: #FCFCFD;
+    border-color: #D8D8DD;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .card.expanded {
+    border-color: var(--black);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  .card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-head-text { flex: 1; }
+  .chevron {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--gray-soft);
+    color: var(--gray-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    transition: transform 0.2s, background 0.2s, color 0.2s;
+  }
+  .card.expanded .chevron {
+    background: var(--black);
+    color: #fff;
+    transform: rotate(45deg);
   }
   .card-id {
     font-size: 10px;
@@ -236,8 +300,17 @@
     font-weight: 600;
     line-height: 1.35;
     color: var(--black);
-    margin-bottom: 12px;
     min-height: 50px;
+  }
+  .card .trail {
+    max-height: 0;
+    overflow: hidden;
+    margin-top: 0;
+    transition: max-height 0.35s ease, margin-top 0.2s ease;
+  }
+  .card.expanded .trail {
+    max-height: 800px;
+    margin-top: 14px;
   }
   .trail {
     list-style: none;
@@ -371,6 +444,10 @@
 
   <section class="matrix-section">
     <h2>Os 9 resultados possíveis</h2>
+    <div class="matrix-controls">
+      <p class="matrix-hint">Clique em qualquer card pra ver a trilha completa.</p>
+      <button type="button" id="toggle-all" class="toggle-btn">Expandir todas</button>
+    </div>
     <div class="matrix">
       <div></div>
       <div class="col-header cleared">Sem dívidas</div>
@@ -384,8 +461,13 @@
         <p class="row-sub">Renda fixa ou autônomo(a) simples</p>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 1</div>
-        <div class="card-title">Seu caminho é direto: organizar e fazer o dinheiro render</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 1</div>
+            <div class="card-title">Seu caminho é direto: organizar e fazer o dinheiro render</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li><span class="step-num">2</span>Otimização de Gastos - Orçamento</li>
@@ -395,8 +477,13 @@
         </ol>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 2</div>
-        <div class="card-title">Você tem espaço pra respirar: bora arrumar a casa antes de mexer nas dívidas</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 2</div>
+            <div class="card-title">Você tem espaço pra respirar: bora arrumar a casa antes de mexer nas dívidas</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li><span class="step-num">2</span>Otimização de Gastos - Orçamento</li>
@@ -407,8 +494,13 @@
         </ol>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 3</div>
-        <div class="card-title">Tirar você do sufoco das dívidas é o primeiro passo</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 3</div>
+            <div class="card-title">Tirar você do sufoco das dívidas é o primeiro passo</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li><span class="step-num">2</span>Plano de Quitação de Dívidas</li>
@@ -426,8 +518,13 @@
         <p class="row-sub">Pró-labore, conta PJ definidos</p>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 1 + complemento</div>
-        <div class="card-title">Caminho direto + módulo de empresa como complemento</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 1 + complemento</div>
+            <div class="card-title">Caminho direto + módulo de empresa como complemento</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li><span class="step-num">2</span>Otimização de Gastos - Orçamento</li>
@@ -438,8 +535,13 @@
         </ol>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 2 + complemento</div>
-        <div class="card-title">Organizar o pessoal, reforçar a empresa, depois quitar</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 2 + complemento</div>
+            <div class="card-title">Organizar o pessoal, reforçar a empresa, depois quitar</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li><span class="step-num">2</span>Otimização de Gastos - Orçamento</li>
@@ -451,8 +553,13 @@
         </ol>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 3 + complemento</div>
-        <div class="card-title">Quitar primeiro, com a empresa servindo de apoio</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 3 + complemento</div>
+            <div class="card-title">Quitar primeiro, com a empresa servindo de apoio</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li><span class="step-num">2</span>Plano de Quitação de Dívidas</li>
@@ -471,8 +578,13 @@
         <p class="row-sub">Sem pró-labore claro, contas misturadas</p>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 4</div>
-        <div class="card-title">Como você tem empresa, vamos organizar ela antes do pessoal</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 4</div>
+            <div class="card-title">Como você tem empresa, vamos organizar ela antes do pessoal</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li class="priority"><span class="step-num">2</span>Estrutura Financeira PJ</li>
@@ -483,8 +595,13 @@
         </ol>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 6</div>
-        <div class="card-title">Sua trilha: arrumar a empresa, organizar o pessoal e quitar com estratégia</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 6</div>
+            <div class="card-title">Sua trilha: arrumar a empresa, organizar o pessoal e quitar com estratégia</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li class="priority"><span class="step-num">2</span>Estrutura Financeira PJ</li>
@@ -496,8 +613,13 @@
         </ol>
       </div>
       <div class="card">
-        <div class="card-id">Resultado 5</div>
-        <div class="card-title">Vamos arrumar a casa: primeiro a empresa, depois sair das dívidas</div>
+        <div class="card-head">
+          <div class="card-head-text">
+            <div class="card-id">Resultado 5</div>
+            <div class="card-title">Vamos arrumar a casa: primeiro a empresa, depois sair das dívidas</div>
+          </div>
+          <span class="chevron" aria-hidden="true">+</span>
+        </div>
         <ol class="trail">
           <li><span class="step-num">1</span>Raio-X Inicial</li>
           <li class="priority"><span class="step-num">2</span>Estrutura Financeira PJ</li>
@@ -519,6 +641,37 @@
   </footer>
 
 </div>
+
+<script>
+  (function() {
+    const cards = document.querySelectorAll('.card');
+    const toggleBtn = document.getElementById('toggle-all');
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        const wasOpen = card.classList.contains('expanded');
+        cards.forEach(c => c.classList.remove('expanded'));
+        if (!wasOpen) card.classList.add('expanded');
+        updateToggleLabel();
+      });
+    });
+
+    function updateToggleLabel() {
+      const expandedCount = document.querySelectorAll('.card.expanded').length;
+      toggleBtn.textContent = expandedCount === cards.length ? 'Recolher todas' : 'Expandir todas';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+      const expandedCount = document.querySelectorAll('.card.expanded').length;
+      const allExpanded = expandedCount === cards.length;
+      cards.forEach(c => {
+        if (allExpanded) c.classList.remove('expanded');
+        else c.classList.add('expanded');
+      });
+      updateToggleLabel();
+    });
+  })();
+</script>
 
 </body>
 </html>
