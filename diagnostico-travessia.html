@@ -723,7 +723,7 @@
 </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjy_3xfgPrfvvMlh10i7FoyXdOgLZnhTJguHtoGa92tD1kYY48it6kDgXsHek_xQMg/exec';
   const respostas = {};
@@ -827,34 +827,128 @@
   }
 
   function downloadPDF() {
-    const original = document.getElementById('pdf-content');
-    const clone = original.cloneNode(true);
-    clone.id = 'pdf-clone';
-    clone.style.cssText = 'position:absolute; left:-9999px; top:0; width:620px; padding:32px; background:#fff; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;';
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+      alert('Aguarde um instante e clique novamente — biblioteca ainda carregando.');
+      return;
+    }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-    const aluno = clone.querySelector('#pdf-aluno');
+    const pageWidth = 210;
+    const margin = 18;
+    const contentWidth = pageWidth - 2 * margin;
+    let y = margin;
+
+    // Tag superior
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(108, 108, 112);
+    doc.text('DIAGNÓSTICO DO MÉTODO TRAVESSIA', margin, y);
+    y += 7;
+
+    // Aluno + data
     const dataHoje = new Date().toLocaleDateString('pt-BR');
-    aluno.textContent = `${respostas.nome || ''} • ${dataHoje}`;
-    aluno.style.display = 'block';
+    const nome = respostas.nome || '';
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(80, 80, 85);
+    doc.text(`${nome}${nome ? '  •  ' : ''}${dataHoje}`, margin, y);
+    y += 14;
 
-    document.body.appendChild(clone);
+    // Título
+    const titulo = document.getElementById('result-title').textContent;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.setTextColor(28, 28, 30);
+    const titleLines = doc.splitTextToSize(titulo, contentWidth);
+    doc.text(titleLines, margin, y);
+    y += titleLines.length * 7 + 3;
 
-    const nomeBase = (respostas.nome || 'aluna').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `trilha-travessia-${nomeBase}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
+    // Descrição
+    const desc = document.getElementById('result-desc').textContent;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(108, 108, 112);
+    const descLines = doc.splitTextToSize(desc, contentWidth);
+    doc.text(descLines, margin, y);
+    y += descLines.length * 5.5 + 12;
 
-    html2pdf().set(opt).from(clone).save().then(() => {
-      document.body.removeChild(clone);
-    }).catch(err => {
-      console.error('PDF erro:', err);
-      if (document.body.contains(clone)) document.body.removeChild(clone);
+    // Trilha — coleta os steps
+    const stepNodes = document.querySelectorAll('#trilha-steps .trilha-step');
+    const stepData = Array.from(stepNodes).map(s => ({
+      n: s.querySelector('.trilha-step-num').textContent,
+      text: s.querySelector('span').textContent
+    }));
+
+    // Card cinza da trilha
+    const cardPadX = 8;
+    const cardPadTop = 9;
+    const cardPadBottom = 8;
+    const stepGap = 9;
+    const labelHeight = 8;
+    const cardHeight = cardPadTop + labelHeight + (stepData.length * stepGap) + cardPadBottom - 3;
+
+    doc.setFillColor(245, 245, 247);
+    doc.roundedRect(margin, y, contentWidth, cardHeight, 3, 3, 'F');
+
+    // Label do card
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(142, 142, 147);
+    doc.text('SUA TRILHA RECOMENDADA', margin + cardPadX, y + cardPadTop);
+
+    // Steps numerados
+    let stepY = y + cardPadTop + labelHeight + 2;
+    stepData.forEach(step => {
+      // Círculo do número
+      doc.setFillColor(28, 28, 30);
+      doc.circle(margin + cardPadX + 3, stepY - 1.5, 3, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(String(step.n), margin + cardPadX + 3, stepY - 0.5, { align: 'center' });
+
+      // Texto do step
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.setTextColor(28, 28, 30);
+      const stepLines = doc.splitTextToSize(step.text, contentWidth - cardPadX * 2 - 8);
+      doc.text(stepLines[0], margin + cardPadX + 9, stepY);
+
+      stepY += stepGap;
     });
+
+    y += cardHeight + 8;
+
+    // Próximo passo (box escuro)
+    const nextText = document.getElementById('next-step-text').textContent;
+    const nextBoxHeight = 18;
+    doc.setFillColor(28, 28, 30);
+    doc.roundedRect(margin, y, contentWidth, nextBoxHeight, 3, 3, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(180, 180, 185);
+    doc.text('PRÓXIMO PASSO', margin + 8, y + 7);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.text(nextText, margin + 8, y + 14);
+
+    y += nextBoxHeight + 12;
+
+    // Rodapé
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(142, 142, 147);
+    doc.text('Acesse a área de membros: metodotravessia.voompplay.com.br', margin, 285);
+
+    // Salvar
+    const nomeBase = (respostas.nome || 'aluna').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    doc.save(`trilha-travessia-${nomeBase || 'aluna'}.pdf`);
   }
 
   function showResult() {
