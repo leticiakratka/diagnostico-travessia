@@ -827,21 +827,33 @@
   }
 
   function downloadPDF() {
-    const el = document.getElementById('pdf-content');
-    const aluno = document.getElementById('pdf-aluno');
-    const nomeBase = (respostas.nome || 'aluna').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const original = document.getElementById('pdf-content');
+    const clone = original.cloneNode(true);
+    clone.id = 'pdf-clone';
+    clone.style.cssText = 'position:absolute; left:-9999px; top:0; width:620px; padding:32px; background:#fff; font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;';
+
+    const aluno = clone.querySelector('#pdf-aluno');
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     aluno.textContent = `${respostas.nome || ''} • ${dataHoje}`;
     aluno.style.display = 'block';
+
+    document.body.appendChild(clone);
+
+    const nomeBase = (respostas.nome || 'aluna').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const opt = {
-      margin: [12, 12, 12, 12],
+      margin: [10, 10, 10, 10],
       filename: `trilha-travessia-${nomeBase}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
-    html2pdf().set(opt).from(el).save().then(() => {
-      aluno.style.display = '';
+
+    html2pdf().set(opt).from(clone).save().then(() => {
+      document.body.removeChild(clone);
+    }).catch(err => {
+      console.error('PDF erro:', err);
+      if (document.body.contains(clone)) document.body.removeChild(clone);
     });
   }
 
@@ -957,7 +969,7 @@
     const COMECE_URL = 'https://metodotravessia.voompplay.com.br/watch/course/8963/module/36089/lesson/207501';
 
     if (respostas.comece_aqui === 'nao') {
-      trilha.unshift({ text: 'Comece Aqui (curso de boas-vindas)' });
+      trilha.unshift({ text: 'Comece Aqui (instruções iniciais)' });
       trilha = trilha.map((s, i) => ({ n: i + 1, text: s.text }));
       nextStep = 'Acesse: Comece Aqui';
     } else {
@@ -980,7 +992,10 @@
       `<div class="trilha-step"><div class="trilha-step-num">${s.n}</div><span>${s.text}</span></div>`
     ).join('');
 
-    if (respostas.consultoria === 'sim') document.getElementById('consultoria-card').classList.add('show');
+    const rendaAlta = ['De R$ 7.000 a R$ 12.000', 'De R$ 12.000 a R$ 18.000', 'De R$ 18.000 a R$ 50.000', 'Acima de R$ 50.000'];
+    if (respostas.consultoria === 'sim' && rendaAlta.includes(respostas.renda)) {
+      document.getElementById('consultoria-card').classList.add('show');
+    }
     document.getElementById('progress-wrap').style.display = 'none';
     showStep('result');
   }
