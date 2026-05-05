@@ -353,6 +353,41 @@
     box-shadow: 0 4px 12px rgba(26, 135, 84, 0.3);
   }
 
+  .cta-help {
+    margin-top: 18px;
+    font-size: 13px;
+    color: #6C6C70;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .btn-pdf {
+    display: block;
+    width: 100%;
+    background: #fff;
+    color: #1C1C1E;
+    border: 1.5px solid #1C1C1E;
+    border-radius: 12px;
+    padding: 14px 24px;
+    margin-top: 8px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-pdf:hover { background: #1C1C1E; color: #fff; }
+
+  .pdf-only { display: none; }
+  #pdf-aluno {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #6C6C70;
+    font-weight: 500;
+  }
+
   .consultoria-card {
     border: 1.5px solid #E8E8E8;
     border-radius: 12px;
@@ -421,6 +456,28 @@
     <div class="btn-row"><button class="btn btn-primary" onclick="goTo(2)">Continuar</button></div>
   </div>
 
+  <!-- STEP 1B: Comece Aqui (curso de boas-vindas do Método Travessia) -->
+  <div class="step" id="step-1b">
+    <div class="step-label">Boas-vindas</div>
+    <h2>Você já assistiu o curso "Comece Aqui" do Método Travessia?</h2>
+    <p class="question-hint">O Comece Aqui é o curso de boas-vindas do método. Quem ainda não viu, começa por ele antes de seguir pra trilha personalizada.</p>
+    <div class="options">
+      <div class="option" onclick="selectOption(this, 'comece_aqui', 'sim')">
+        <div class="option-radio"></div>
+        <div class="option-text"><div class="option-title">Sim, já assisti — posso ir direto pra trilha</div></div>
+      </div>
+      <div class="option" onclick="selectOption(this, 'comece_aqui', 'nao')">
+        <div class="option-radio"></div>
+        <div class="option-text"><div class="option-title">Não, ainda não — quero começar do início</div></div>
+      </div>
+    </div>
+    <p class="error-msg" id="err-1b">Selecione uma opção para continuar.</p>
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="goTo(1)">Voltar</button>
+      <button class="btn btn-primary" onclick="goTo1bNext()">Continuar</button>
+    </div>
+  </div>
+
   <!-- STEP 2: PJ? -->
   <div class="step" id="step-2">
     <div class="step-label">Perfil</div>
@@ -438,7 +495,7 @@
     </div>
     <p class="error-msg" id="err-2">Selecione uma opção para continuar.</p>
     <div class="btn-row">
-      <button class="btn btn-back" onclick="goTo(1)">Voltar</button>
+      <button class="btn btn-back" onclick="showStep('1b')">Voltar</button>
       <button class="btn btn-primary" onclick="goTo(3)">Continuar</button>
     </div>
   </div>
@@ -635,23 +692,28 @@
 
   <!-- RESULTADO -->
   <div class="step" id="step-result">
-    <div class="result-header">
-      <div class="result-badge">Diagnóstico concluído</div>
-      <h2 id="result-title"></h2>
-      <p id="result-desc"></p>
+    <div id="pdf-content">
+      <div class="result-header">
+        <div class="result-badge">Diagnóstico concluído</div>
+        <h2 id="result-title"></h2>
+        <p id="result-desc"></p>
+        <p class="pdf-only" id="pdf-aluno"></p>
+      </div>
+
+      <div class="trilha-card">
+        <div class="trilha-label">Sua trilha recomendada</div>
+        <div class="trilha-steps" id="trilha-steps"></div>
+      </div>
+
+      <div class="next-action">
+        <p>Próximo passo</p>
+        <strong id="next-step-text"></strong>
+      </div>
     </div>
 
-    <div class="trilha-card">
-      <div class="trilha-label">Sua trilha recomendada</div>
-      <div class="trilha-steps" id="trilha-steps"></div>
-    </div>
-
-    <div class="next-action">
-      <p>Próximo passo</p>
-      <strong id="next-step-text"></strong>
-    </div>
-
-    <a href="https://metodotravessia.voompplay.com.br/watch/course/8963/module/36089/lesson/207501" class="cta-raiox" target="_blank" rel="noopener">Começar pelo Raio-X Inicial agora</a>
+    <p class="cta-help">Baixe pra consultar enquanto avança. A ordem dos cursos é o que faz a diferença.</p>
+    <button type="button" class="btn-pdf" onclick="downloadPDF()">📄 Baixar minha trilha em PDF</button>
+    <a id="cta-raiox" href="https://metodotravessia.voompplay.com.br/watch/course/8274/module/34274/lesson/199075" class="cta-raiox" target="_blank" rel="noopener">Começar pelo Raio-X Inicial agora</a>
 
     <div class="consultoria-card" id="consultoria-card">
       <p>Você sinalizou interesse na Consultoria Individual. Entraremos em contato em breve pelo WhatsApp para apresentar como funciona e tirar suas dúvidas.</p>
@@ -661,6 +723,7 @@
 </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzjy_3xfgPrfvvMlh10i7FoyXdOgLZnhTJguHtoGa92tD1kYY48it6kDgXsHek_xQMg/exec';
   const respostas = {};
@@ -710,6 +773,7 @@
       if (!emailOk) { document.getElementById('err-1').classList.remove('show'); return; }
       document.getElementById('err-1').classList.remove('show');
       respostas.nome = nome; respostas.email = email; respostas.whatsapp = wpp;
+      if (!respostas.comece_aqui) { showStep('1b'); return; }
     }
     if (n === 3) {
       if (!respostas.pj) { document.getElementById('err-2').classList.add('show'); return; }
@@ -754,6 +818,31 @@
     if (!respostas.pj_separada) { document.getElementById('err-3b').classList.add('show'); return; }
     document.getElementById('err-3b').classList.remove('show');
     showStep(4);
+  }
+
+  function goTo1bNext() {
+    if (!respostas.comece_aqui) { document.getElementById('err-1b').classList.add('show'); return; }
+    document.getElementById('err-1b').classList.remove('show');
+    showStep(2);
+  }
+
+  function downloadPDF() {
+    const el = document.getElementById('pdf-content');
+    const aluno = document.getElementById('pdf-aluno');
+    const nomeBase = (respostas.nome || 'aluna').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    aluno.textContent = `${respostas.nome || ''} • ${dataHoje}`;
+    aluno.style.display = 'block';
+    const opt = {
+      margin: [12, 12, 12, 12],
+      filename: `trilha-travessia-${nomeBase}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(el).save().then(() => {
+      aluno.style.display = '';
+    });
   }
 
   function showResult() {
@@ -863,6 +952,23 @@
         trilha = trilha.map((s, i) => ({ n: i + 1, text: s.text }));
       }
     }
+
+    const RAIOX_URL = 'https://metodotravessia.voompplay.com.br/watch/course/8274/module/34274/lesson/199075';
+    const COMECE_URL = 'https://metodotravessia.voompplay.com.br/watch/course/8963/module/36089/lesson/207501';
+
+    if (respostas.comece_aqui === 'nao') {
+      trilha.unshift({ text: 'Comece Aqui (curso de boas-vindas)' });
+      trilha = trilha.map((s, i) => ({ n: i + 1, text: s.text }));
+      nextStep = 'Acesse: Comece Aqui';
+    } else {
+      nextStep = 'Acesse: Raio-X Inicial';
+    }
+
+    const ctaLink = (respostas.comece_aqui === 'nao') ? COMECE_URL : RAIOX_URL;
+    const ctaLabel = (respostas.comece_aqui === 'nao') ? 'Começar pelo Comece Aqui agora' : 'Começar pelo Raio-X Inicial agora';
+    const ctaEl = document.getElementById('cta-raiox');
+    ctaEl.href = ctaLink;
+    ctaEl.textContent = ctaLabel;
 
     respostas.trilha = titulo;
     submitToSheets(respostas);
